@@ -1,0 +1,734 @@
+{
+  "name": "gestor de consultas",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "id": "a4804950-18b6-4b09-a43e-b9d8205a32ea",
+      "name": "recepción de consulta",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -400,
+        -512
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mKh3WPETMsDhOzJK",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e21a5506-8c04-42d3-9c37-d8f9c66be4b1",
+              "name": "admin",
+              "value": "={{ $json.To }}",
+              "type": "string"
+            },
+            {
+              "id": "374382ae-4815-4830-99b1-1d6d0ff129ad",
+              "name": "sender",
+              "value": "={{ $json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "1dca3ac3-e3ca-4862-9986-d224815c3d47",
+              "name": "message",
+              "value": "={{ $json.snippet }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "374ee812-f9ef-4863-ad15-a1eee36e028b",
+      "name": "extracción de campos",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -112,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Dirección de email del administrador: Extraerla apropiadamente de \"{{ $json.admin }}\" e incluirla en la salida JSON como \"admin\"\n\nDirección de email del emisor: Extraerla apropiadamente de \"{{ $json.sender }}\" e incluirla en la salida JSON como \"email\"\nMensaje: {{ $json.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Rol: Eres un gestor de consultas sobre un inventario de libros.\n\nObjetivo: Hacer un boceto de respuesta personalizada para cada mensaje de consulta. Ajusta el tono de la respuesta según el mensaje recibido y guardarlo en la tabla \"replies\" de Airtable.\n\nContexto: La información de los productos se encuentran en la tabla \"products\" de Airtable. Cada fila de la tabla es un libro con un título (title), autor (author), descripción (description), fecha de publicación (releasedate), género (genre), precio (price) y unidades restantes (units). La información del las respuestas deben almacenarse en la salida JSON (email,text)). La información del tono y estructura del mensaje en \"tone\"."
+        }
+      },
+      "id": "0b7e24be-72f4-4a61-b68a-d83d88341002",
+      "name": "gestor de consultas",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        -624
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.8-flash",
+        "options": {}
+      },
+      "id": "ed0b9a33-36d8-43f9-833d-f296e0c563a4",
+      "name": "modelo gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        -400
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YutJ9p2OkDvUYjUu",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appoiY3B033sJObPu",
+          "mode": "list",
+          "cachedResultName": "proyecto coderhouse",
+          "cachedResultUrl": "https://airtable.com/appoiY3B033sJObPu"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl4MJDceYZh12LkE",
+          "mode": "list",
+          "cachedResultName": "products",
+          "cachedResultUrl": "https://airtable.com/appoiY3B033sJObPu/tbl4MJDceYZh12LkE"
+        },
+        "options": {}
+      },
+      "id": "def59a12-dde0-4315-85b4-fc4fb47ef7dc",
+      "name": "products",
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -400
+      ],
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Lw1UAkOFvf3kRxjs",
+          "name": "Airtable account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appoiY3B033sJObPu",
+          "mode": "list",
+          "cachedResultName": "proyecto coderhouse",
+          "cachedResultUrl": "https://airtable.com/appoiY3B033sJObPu"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblX0lJcBRKGQUcbJ",
+          "mode": "list",
+          "cachedResultName": "tone",
+          "cachedResultUrl": "https://airtable.com/appoiY3B033sJObPu/tblX0lJcBRKGQUcbJ"
+        },
+        "options": {}
+      },
+      "id": "c7b708a5-546f-4e0f-a12c-8ee91709d8c6",
+      "name": "tone",
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        -400
+      ],
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Lw1UAkOFvf3kRxjs",
+          "name": "Airtable account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('extracción de campos').first().json.admin }}",
+        "subject": "Error en el flujo de consultas de inventario",
+        "emailType": "text",
+        "message": "=Ocurrió un error al procesar una consulta y no se pudo completar tras 3 intentos.\n\nNodo que falló: {{ $prevNode.name }}\nError: {{ $json.error?.message || $json.error || 'Error desconocido' }}\nRemitente de la consulta: {{ $('extracción de campos').first().json.sender }}\nMensaje: {{ $('extracción de campos').first().json.message }}\n\nEjecución: {{ $execution.id }}",
+        "options": {}
+      },
+      "id": "701fc558-10e8-4fc6-bb0f-2f1610fb4242",
+      "name": "aviso de error",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1712,
+        -544
+      ],
+      "executeOnce": true,
+      "webhookId": "32167cf3-e6a1-4032-8b63-22e8de78d8ce",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mKh3WPETMsDhOzJK",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appoiY3B033sJObPu",
+          "mode": "list",
+          "cachedResultName": "proyecto coderhouse",
+          "cachedResultUrl": "https://airtable.com/appoiY3B033sJObPu"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblVrDbGpAnyuwhnl",
+          "mode": "list",
+          "cachedResultName": "replies",
+          "cachedResultUrl": "https://airtable.com/appoiY3B033sJObPu/tblVrDbGpAnyuwhnl"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "text": "={{ $json.output.text }}",
+            "state": "={{ [\"Pendiente\"] }}",
+            "admin": "={{ $json.output.admin }}",
+            "sender": "={{ $json.output.sender }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "admin",
+              "displayName": "admin",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Aprobado",
+                  "value": "Aprobado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "5736f054-53b0-4573-a0ff-5a87540f0dcc",
+      "name": "creación de respuesta",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        -448
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Lw1UAkOFvf3kRxjs",
+          "name": "Airtable account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.fields.admin }}",
+        "subject": "Aviso de consulta de inventario",
+        "emailType": "text",
+        "message": "=Se realizó una consulta.\n\nEmail: {{ $json.fields.sender }}\n\nMensaje propuesto:\n\n\"{{ $json.fields.text }}\"\n\nPara aprobar y continuar, haga clic en el siguiente enlace: {{ $execution.resumeUrl }}",
+        "options": {}
+      },
+      "id": "aa856744-72b4-4235-b754-2e2a84111e69",
+      "name": "notificación de respuesta pendiente",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        -368
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "webhookId": "2a18fb06-b2d4-4407-9302-12a7cb66d2b8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mKh3WPETMsDhOzJK",
+          "name": "Gmail account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "id": "cb0669c4-8d5c-419e-b5e0-040594947c11",
+      "name": "espera de aprobación",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        -304
+      ],
+      "webhookId": "74addd0c-54ca-4044-9170-c5984fde79eb"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('gestor de consultas').item.json.output.sender }}",
+        "subject": "Respuesta a su consulta",
+        "emailType": "text",
+        "message": "={{ $('gestor de consultas').item.json.output.text }}",
+        "options": {}
+      },
+      "id": "787707ca-45ef-41f1-b696-52de9919224a",
+      "name": "envío de respuesta",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        -400
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "webhookId": "e09e8071-2f11-4a5f-93ba-35c7e01f66ac",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mKh3WPETMsDhOzJK",
+          "name": "Gmail account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appoiY3B033sJObPu",
+          "mode": "list",
+          "cachedResultName": "proyecto coderhouse",
+          "cachedResultUrl": "https://airtable.com/appoiY3B033sJObPu"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblVrDbGpAnyuwhnl",
+          "mode": "list",
+          "cachedResultName": "replies",
+          "cachedResultUrl": "https://airtable.com/appoiY3B033sJObPu/tblVrDbGpAnyuwhnl"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('creación de respuesta').item.json.id }}",
+            "state": "={{ [\"Aprobado\"] }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "admin",
+              "displayName": "admin",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "sender",
+              "displayName": "sender",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "state",
+              "displayName": "state",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Aprobado",
+                  "value": "Aprobado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a15f0d47-7ef8-4243-b832-295a0e07f4eb",
+      "name": "actualización respuesta",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        -208
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Lw1UAkOFvf3kRxjs",
+          "name": "Airtable account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"admin\": \"ejemplo1@mail.com\",\n  \"sender\": \"ejemplo2@mail.com\",\n  \"text\": \"reply message\"\n}"
+      },
+      "id": "01a8a9f4-7609-4213-86ea-9e1c1aea6a8d",
+      "name": "parseo estructurado",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        496,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "El flujo de consultas falló tras 3 intentos. Se notificó al administrador por email."
+      },
+      "id": "c822f1d2-8c46-4d9c-b78b-fb778db96405",
+      "name": "error",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1936,
+        -544
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "recepción de consulta": {
+      "main": [
+        [
+          {
+            "node": "extracción de campos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extracción de campos": {
+      "main": [
+        [
+          {
+            "node": "gestor de consultas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gestor de consultas": {
+      "main": [
+        [
+          {
+            "node": "creación de respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "aviso de error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "modelo gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "gestor de consultas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "products": {
+      "ai_tool": [
+        [
+          {
+            "node": "gestor de consultas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tone": {
+      "ai_tool": [
+        [
+          {
+            "node": "gestor de consultas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "aviso de error": {
+      "main": [
+        [
+          {
+            "node": "error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "creación de respuesta": {
+      "main": [
+        [
+          {
+            "node": "notificación de respuesta pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "aviso de error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notificación de respuesta pendiente": {
+      "main": [
+        [
+          {
+            "node": "espera de aprobación",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "aviso de error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "espera de aprobación": {
+      "main": [
+        [
+          {
+            "node": "envío de respuesta",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "actualización respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "envío de respuesta": {
+      "main": [
+        [],
+        [
+          {
+            "node": "aviso de error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "actualización respuesta": {
+      "main": [
+        [],
+        [
+          {
+            "node": "aviso de error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parseo estructurado": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "gestor de consultas",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9af5073c-3b67-48b2-885a-91c4c92de818",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0768836b188eb555715822d8cc4bbed4a7a74e6ee81da46c007ebc415941f430"
+  },
+  "nodeGroups": [
+    {
+      "id": "ce39e6be-c6b8-4a69-abf3-469a06d0baf2",
+      "name": "gestión de consultas",
+      "nodeIds": [
+        "374ee812-f9ef-4863-ad15-a1eee36e028b",
+        "0b7e24be-72f4-4a61-b68a-d83d88341002",
+        "01a8a9f4-7609-4213-86ea-9e1c1aea6a8d",
+        "def59a12-dde0-4315-85b4-fc4fb47ef7dc",
+        "c7b708a5-546f-4e0f-a12c-8ee91709d8c6",
+        "ed0b9a33-36d8-43f9-833d-f296e0c563a4"
+      ],
+      "description": "Lee el mensaje y escribe un mensaje personalizado"
+    },
+    {
+      "id": "eaee2a2a-61b0-429b-8f6a-7124fc83b7e9",
+      "name": "Manejo de errores",
+      "nodeIds": [
+        "701fc558-10e8-4fc6-bb0f-2f1610fb4242",
+        "c822f1d2-8c46-4d9c-b78b-fb778db96405"
+      ],
+      "description": "Si algún estado, marca la ejecución como fallida"
+    }
+  ],
+  "id": "5b7uMof1D9nE1bjz",
+  "tags": []
+}
